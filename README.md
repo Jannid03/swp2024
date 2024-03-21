@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2016-2024 Knut Reinert & MPI für molekulare Genetik
 SPDX-License-Identifier: CC0-1.0
 -->
 
-# SeqAn3 App Template [![build status][1]][2] [![codecov][3]][4]
+# SWP2024 [![build status][1]][2] [![codecov][3]][4]
 <!--
     Above uses reference-style links with numbers.
     See also https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#links.
