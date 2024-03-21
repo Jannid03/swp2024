@@ -77,3 +77,4 @@ Note: The subsequent steps, e.g., Directory Structure, are not necessary.
 6. optional: build and run the tests: `make check`
 7. execute the app: `./bin/app-template`, or the new project name you set in 2 (`./bin/my_project`).
 8. optional: publish your tool to the galaxy toolshed, follow the example in https://github.com/SGSSGene/raptor-galaxy
+9. Start Working (test)
