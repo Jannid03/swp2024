@@ -16,3 +16,6 @@ target_compile_options ("${PROJECT_NAME}_lib" PUBLIC "-pedantic" "-Wall" "-Wextr
 # Add the application.
 add_executable ("${PROJECT_NAME}" main.cpp)
 target_link_libraries ("${PROJECT_NAME}" PRIVATE "${PROJECT_NAME}_lib")
+
+add_executable ("${PROJECT_NAME}" swp2024_main.cpp)
+target_link_libraries ("${PROJECT_NAME}" PRIVATE "${PROJECT_NAME}_lib")
