@@ -5,10 +5,10 @@
 cmake_minimum_required (VERSION 3.25)
 
 # Define the application name and version.
-project (app-template
+project (SWP2024
          LANGUAGES CXX
          VERSION 1.0.0
-         DESCRIPTION "My application description"
+         DESCRIPTION "Vergleich des Jaccard Indexes zwsichen k-meren und Minimizern"
 )
 
 # This allows including `*.cmake` files from the `cmake` directory without specifying the full path.
