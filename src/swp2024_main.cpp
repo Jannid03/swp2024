@@ -67,12 +67,20 @@ int main()
     auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{3}});
     seqan3::debug_stream << kmere_seq2 << '\n';
 
-    double i = jaccard_index(kmere_seq1, kmere_seq2);
-    //double i = jaccard_index(std::vector<size_t> {1,2,2,3,5}, std::vector<size_t> {0,2,7,9});
-    std::cout << i << std::endl;
-    // auto mini = seq1 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
-    //                                                                 seqan3::window_size{5},
-    //                                                                 seqan3::seed{0});
-    // seqan3::debug_stream << mini << '\n';
+    double kmere_jac = jaccard_index(kmere_seq1, kmere_seq2);
+    std::cout << kmere_jac << std::endl;
+
+    auto mini_seq1 = seq1 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
+                                                                    seqan3::window_size{5},
+                                                                    seqan3::seed{0});
+    seqan3::debug_stream << mini_seq1 << '\n';
+
+    auto mini_seq2 = seq2 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
+                                                                    seqan3::window_size{5},
+                                                                    seqan3::seed{0});
+    seqan3::debug_stream << mini_seq2 << '\n';
+
+    double mini_jac = jaccard_index(mini_seq1, mini_seq2);
+    std::cout << mini_jac << std::endl;
 
 }
