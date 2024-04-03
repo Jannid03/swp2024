@@ -3,6 +3,9 @@
 #include <seqan3/search/views/minimiser_hash.hpp>
 #include <seqan3/utility/views/enforce_random_access.hpp>
 
+#include <sharg/all.hpp>
+#include <sharg/validators.hpp>
+
 #include <algorithm>
 #include <ranges>
 #include <map>
@@ -15,6 +18,12 @@ using namespace seqan3::literals;
 
 //2. Jaccard Funktion
 //3. Ausgabe
+
+struct eingabe {
+    std::string modus{"k"};
+    std::vector<std::filesystem::path> file{};
+};
+
 double jaccard_index (auto first, auto second) {
     double size_1 {0};
     double size_2 {0};
@@ -56,8 +65,42 @@ double jaccard_index (auto first, auto second) {
     return uni/(size_1+size_2);
 }
 
-int main()
-{
+void intialize_parser (sharg::parser & parser, eingabe & in) {
+    parser.info.author = "Jannik Dubrau";
+    parser.info.short_description = "Jaccard Index für K-Mere und Minimizer";
+
+    sharg::value_list_validator mode_validator{"m", "k", "b"};
+    parser.add_option(in.modus, 
+                        sharg::config{  .short_id = 'm', 
+                                        .long_id = "mode", 
+                                        .description ="Auswahl der Methode",
+                                        .validator = mode_validator});
+
+    sharg::input_file_validator my_file_ext_validator{{"fa", "fasta"}};
+    parser.add_option(in.file, sharg::config{   .short_id = 'i',
+                                                .long_id = "input",
+                                                .description = "Bitte zwei Eingabedateien eingeben",
+                                                .validator = my_file_ext_validator});
+    
+}
+
+int main(int argc, char** argv) {
+
+    sharg::parser myparser{"swp2024_main", argc, argv};
+    eingabe in{};
+    intialize_parser(myparser, in);
+
+    try
+    {
+        myparser.parse(); // trigger command line parsing
+    }
+    catch (sharg::parser_error const & ext) // catch user errors
+    {
+        std::cerr << ext.what() << "\n"; // customise your error message
+        return -1;
+    }
+ 
+
     std::vector<seqan3::dna4> seq1 {"AGCTGTCGAAAGTCGAAAT"_dna4};
     std::vector<seqan3::dna4> seq2 {"CATGATGTCACTGATCGTA"_dna4};
 
