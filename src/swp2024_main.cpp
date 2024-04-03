@@ -76,11 +76,46 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
                                         .description ="Auswahl der Methode",
                                         .validator = mode_validator});
 
-    sharg::input_file_validator my_file_ext_validator{{"fa", "fasta"}};
+    /*sharg::input_file_validator my_file_ext_validator{{"fa", "fasta"}};
     parser.add_option(in.file, sharg::config{   .short_id = 'i',
                                                 .long_id = "input",
                                                 .description = "Bitte zwei Eingabedateien eingeben",
-                                                .validator = my_file_ext_validator});
+                                                .validator = my_file_ext_validator});*/
+    
+}
+
+void run_program (char modus) {
+
+
+    std::vector<seqan3::dna4> seq1 {"AGCTGTCGAAAGTCGAAAT"_dna4};
+    std::vector<seqan3::dna4> seq2 {"CATGATGTCACTGATCGTA"_dna4};
+
+    if (modus == 'k') {
+        
+        auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{3}});
+        seqan3::debug_stream << kmere_seq1 << '\n';
+
+        auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{3}});
+        seqan3::debug_stream << kmere_seq2 << '\n';
+
+        double kmere_jac = jaccard_index(kmere_seq1, kmere_seq2);
+        std::cout << kmere_jac << std::endl;
+    }
+    else if (modus == 'm') {
+
+        auto mini_seq1 = seq1 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
+                                                                    seqan3::window_size{5},
+                                                                        seqan3::seed{0});
+        seqan3::debug_stream << mini_seq1 << '\n';
+
+        auto mini_seq2 = seq2 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
+                                                                        seqan3::window_size{5},
+                                                                        seqan3::seed{0});
+        seqan3::debug_stream << mini_seq2 << '\n';
+
+        double mini_jac = jaccard_index(mini_seq1, mini_seq2);
+        std::cout << mini_jac << std::endl;
+    }
     
 }
 
@@ -100,30 +135,6 @@ int main(int argc, char** argv) {
         return -1;
     }
  
-
-    std::vector<seqan3::dna4> seq1 {"AGCTGTCGAAAGTCGAAAT"_dna4};
-    std::vector<seqan3::dna4> seq2 {"CATGATGTCACTGATCGTA"_dna4};
-
-    auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{3}});
-    seqan3::debug_stream << kmere_seq1 << '\n';
-
-    auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{3}});
-    seqan3::debug_stream << kmere_seq2 << '\n';
-
-    double kmere_jac = jaccard_index(kmere_seq1, kmere_seq2);
-    std::cout << kmere_jac << std::endl;
-
-    auto mini_seq1 = seq1 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
-                                                                    seqan3::window_size{5},
-                                                                    seqan3::seed{0});
-    seqan3::debug_stream << mini_seq1 << '\n';
-
-    auto mini_seq2 = seq2 | seqan3::views::minimiser_hash(seqan3::shape{seqan3::ungapped{3}}, 
-                                                                    seqan3::window_size{5},
-                                                                    seqan3::seed{0});
-    seqan3::debug_stream << mini_seq2 << '\n';
-
-    double mini_jac = jaccard_index(mini_seq1, mini_seq2);
-    std::cout << mini_jac << std::endl;
+    run_program(in.modus[0]);
 
 }
