@@ -103,10 +103,10 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
     
     parser.add_option(in.window, sharg::config {.short_id = 'w', .long_id = "window",
                                             .description = "Länge des Windows"});
-    /*sharg::input_file_validator my_file_ext_validator{{"fa", "fasta"}};
+    /*sharg::input_file_validator my_file_ext_validator{{"fq", "fastq"}};
     parser.add_option(in.file, sharg::config{   .short_id = 'i',
                                                 .long_id = "input",
-                                                .description = "Bitte zwei Eingabedateien eingeben",
+                                                .description = "Bitte GENAU zwei Eingabedateien eingeben",
                                                 .validator = my_file_ext_validator});*/
     
 }
