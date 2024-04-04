@@ -19,20 +19,33 @@ using namespace seqan3::literals;
 // 2. File input 
 // 3. Window size custom
 
-
+//Struct für die Eingabeparameter
 struct eingabe {
     std::string modus{"k"};
     uint8_t k {5};
-    size_t window {8};
+    size_t window {5};
     std::vector<std::filesystem::path> file{};
 };
 
+//Generelle Idee: Wir gehen die kmere der ersten Sequenz durch ujd merken uns, 
+// welche wie oft vorkommen (map). Wir merken uns auch die Anzahl (size_1)
+//Anschließend gehen wir den zweiten Vektor durch und suchen, ob es Vorkommen gibt
+// Wenn ja -> -1 in Map und Anzahl der geteilten kmere erhöht (inter)
+// Wenn nein -> nur size_2 erhöht, size_2 steht für exklusiven Teil der zweiten Sequenz 
+// Also: (#Kmere in Sequenz 2 / #Kmere in Intersection von 1 und 2)
+// inter -> #Kmere in Intersection
+// size_1 -> #Kmere in Sequenz 1 (INKLUSIVE der kmere in der Intersection)
+// size_2 -> #Kmere in Sequenz EXKLUSIVE der kmere in der Intersection
+// Darauf folgt: size_1 + size_2 == Union von Seq 1 und Seq 2
+// Anschließend Jaccard Berechnung: inter / (size_1 + size_2)
 double jaccard_index (auto first, auto second) {
+    //Intialisierung
     double size_1 {0};
     double size_2 {0};
-    double uni {0};
+    double inter {0};
     std::map<size_t, size_t> dic;
 
+    //Durch erste Sequenz, erstellen des dictionary
     for (auto i : first) {
         auto search = dic.find(i);
         size_1++;
@@ -45,19 +58,19 @@ double jaccard_index (auto first, auto second) {
         }
     }
 
+    //Zweite Sequenz: Wenn nicht gefunden, size_2 um eins erhöht
     for (auto i : second) {
         auto search = dic.find(i);
 
         if(search == dic.end()) {
             size_2++;
         }
-        // else if (dic.at(i) == 0) {
-        //     size_2++;
-        // }
+        //Wenn gefunden, dann inter erhöht und in Dcitionary um eins verringert
         else {
             dic.at(i)--;
-            uni++;
+            inter++;
 
+            //wenn aufgebraucht, dann aus dictionary entfernt
             if (dic.at(i) == 0) {
                 dic.erase(i);
             }
@@ -65,13 +78,16 @@ double jaccard_index (auto first, auto second) {
 
     }
 
-    return uni/(size_1+size_2);
+    //Jaccard Index berechnet und zurückgegeben
+    return inter/(size_1+size_2);
 }
 
 void intialize_parser (sharg::parser & parser, eingabe & in) {
     parser.info.author = "Jannik Dubrau";
     parser.info.short_description = "Jaccard Index für K-Mere und Minimizer";
-
+    parser.info.version = "1.0";
+    
+    //Einfügen der Optionene für den Parser
     sharg::value_list_validator mode_validator{"m", "k", "b"};
     parser.add_option(in.modus, 
                         sharg::config{  .short_id = 'm', 
@@ -96,7 +112,7 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
 }
 
 void kmere (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, uint8_t km) {
-
+    //Aufruf der Funktionene und der Berechnung
     auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
     seqan3::debug_stream << kmere_seq1 << '\n';
 
@@ -108,8 +124,8 @@ void kmere (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, 
 }
 
 void mini (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, uint8_t km, uint32_t w) {
-    uint64_t seed = 0x8F3F73B5CF1C9ADE;
-    uint32_t window = w - km + 1;
+    uint64_t seed = 0x8F3F73B5CF1C9ADE; //Höchster Seed, eventuell Anpassugn später
+    uint32_t window = w - km + 1; //window size Berechnung für eingabe bei minimiser
     auto mini_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}})
                             | std::views::transform([seed](uint64_t i) {return i^seed;})
                             | seqan3::views::minimiser (window);
@@ -120,16 +136,18 @@ void mini (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, u
                             | seqan3::views::minimiser (window);
     seqan3::debug_stream << mini_seq2 << '\n';
 
+    //Aufruf der Berechnung
     double mini_jac = jaccard_index(mini_seq1, mini_seq2);
     std::cout << mini_jac << std::endl;
 }
 
 void run_program (eingabe & in) {
-
+    //Modus wird abgelesen, da string eingabe aber char einfacher zu vergleichen -> modus[0]
     char modus = in.modus[0];
     std::vector<seqan3::dna4> seq1 {"AGCTGTCGAAAGTCGAAAT"_dna4};
     std::vector<seqan3::dna4> seq2 {"CATGATGTCACTGATCGTA"_dna4};
 
+    //Modus wird abgefragt mit entsprechenden Aufrufen
     if (modus == 'k') {
 
         kmere(seq1, seq2, in.k);
@@ -146,11 +164,12 @@ void run_program (eingabe & in) {
 }
 
 int main(int argc, char** argv) {
-
+    //Erstellen und Intialisieren des Parsers
     sharg::parser myparser{"swp2024_main", argc, argv};
     eingabe in{};
     intialize_parser(myparser, in);
 
+    //Block aus Sharg tutorial übernommen
     try
     {
         myparser.parse(); // trigger command line parsing
@@ -161,6 +180,7 @@ int main(int argc, char** argv) {
         return -1;
     }
  
+    //Tatsächliche Programmausführung, eingegebene Argumente werden übergeben.
     run_program(in);
 
 }
