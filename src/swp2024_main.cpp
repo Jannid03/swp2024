@@ -2,6 +2,7 @@
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/search/views/minimiser_hash.hpp>
 #include <seqan3/utility/views/enforce_random_access.hpp>
+#include <seqan3/io/sequence_file/all.hpp>
 
 #include <sharg/all.hpp>
 #include <sharg/validators.hpp>
@@ -38,7 +39,7 @@ struct eingabe {
 // size_2 -> #Kmere in Sequenz EXKLUSIVE der kmere in der Intersection
 // Darauf folgt: size_1 + size_2 == Union von Seq 1 und Seq 2
 // Anschließend Jaccard Berechnung: inter / (size_1 + size_2)
-double jaccard_index (auto first, auto second) {
+double jaccard_index (auto & first, auto & second) {
     //Intialisierung
     double size_1 {0};
     double size_2 {0};
@@ -103,38 +104,39 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
     
     parser.add_option(in.window, sharg::config {.short_id = 'w', .long_id = "window",
                                             .description = "Länge des Windows"});
-    /*sharg::input_file_validator my_file_ext_validator{{"fq", "fastq"}};
+
+    //sharg::input_file_validator my_file_ext_validator{{"fa", "fasta", "fna"}};
     parser.add_option(in.file, sharg::config{   .short_id = 'i',
                                                 .long_id = "input",
                                                 .description = "Bitte GENAU zwei Eingabedateien eingeben",
-                                                .validator = my_file_ext_validator});*/
+                                                });//.validator = my_file_ext_validator
     
 }
 
-void kmere (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, uint8_t km) {
+void kmere (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km) {
     //Aufruf der Funktionene und der Berechnung
     auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    seqan3::debug_stream << kmere_seq1 << '\n';
+    //seqan3::debug_stream << kmere_seq1 << '\n';
 
     auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    seqan3::debug_stream << kmere_seq2 << '\n';
+    //seqan3::debug_stream << kmere_seq2 << '\n';
 
     double kmere_jac = jaccard_index(kmere_seq1, kmere_seq2);
     std::cout << kmere_jac << std::endl;
 }
 
-void mini (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, uint8_t km, uint32_t w) {
+void mini (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km, uint32_t w) {
     uint64_t seed = 0x8F3F73B5CF1C9ADE; //Höchster Seed, eventuell Anpassugn später
     uint32_t window = w - km + 1; //window size Berechnung für eingabe bei minimiser
     auto mini_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}})
                             | std::views::transform([seed](uint64_t i) {return i^seed;})
                             | seqan3::views::minimiser (window);
-    seqan3::debug_stream << mini_seq1 << '\n';
+    //seqan3::debug_stream << mini_seq1 << '\n';
 
     auto mini_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}})
                             | std::views::transform([seed](uint64_t i) {return i^seed;})
                             | seqan3::views::minimiser (window);
-    seqan3::debug_stream << mini_seq2 << '\n';
+    //seqan3::debug_stream << mini_seq2 << '\n';
 
     //Aufruf der Berechnung
     double mini_jac = jaccard_index(mini_seq1, mini_seq2);
@@ -144,9 +146,21 @@ void mini (std::vector<seqan3::dna4> & seq1, std::vector<seqan3::dna4> & seq2, u
 void run_program (eingabe & in) {
     //Modus wird abgelesen, da string eingabe aber char einfacher zu vergleichen -> modus[0]
     char modus = in.modus[0];
-    std::vector<seqan3::dna4> seq1 {"AGCTGTCGAAAGTCGAAAT"_dna4};
-    std::vector<seqan3::dna4> seq2 {"CATGATGTCACTGATCGTA"_dna4};
 
+    seqan3::sequence_file_input file1{in.file[0]};
+    seqan3::sequence_file_input file2{in.file[1]};
+    std::vector<seqan3::dna5> seq1 {};
+    std::vector<seqan3::dna5> seq2 {};
+    for (auto & sec : file1) {
+        seq1 = sec.sequence();
+    }
+    for (auto & sec : file2) {
+        seq2 = sec.sequence();
+    }
+
+    //seqan3::debug_stream << seq1 << std::endl;
+   
+    //kmere(seq1, seq2, in.k);
     //Modus wird abgefragt mit entsprechenden Aufrufen
     if (modus == 'k') {
 
