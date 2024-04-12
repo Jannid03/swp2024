@@ -22,7 +22,7 @@ using namespace seqan3::literals;
 
 //Struct für die Eingabeparameter
 struct eingabe {
-    std::string modus{"k"};
+    std::string modus{"b"};
     uint8_t k {5};
     size_t window {5};
     std::vector<std::filesystem::path> file{};
@@ -96,9 +96,6 @@ double jaccard_index_ (auto & first, auto & second) {
         set2.emplace(sec);
     }
 
-    seqan3::debug_stream << set1 << '\n';
-    seqan3::debug_stream << set2 << '\n';
-
     std::vector<size_t> vec;
     std::set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), std::back_inserter(vec));
     double inter = vec.size();
@@ -107,7 +104,6 @@ double jaccard_index_ (auto & first, auto & second) {
     std::set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), std::back_inserter(vec));
     double uni = vec.size();
 
-    seqan3::debug_stream << "Inter: " << inter << '\n' << "Uni: " << uni << '\n';
     return inter/uni;
 }
 
@@ -141,19 +137,20 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
     
 }
 
-void kmere (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km) {
+double kmere (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km) {
     //Aufruf der Funktionene und der Berechnung
     auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    seqan3::debug_stream << kmere_seq1 << '\n';
+    //seqan3::debug_stream << kmere_seq1 << '\n';
 
     auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    seqan3::debug_stream << kmere_seq2 << '\n';
+    //seqan3::debug_stream << kmere_seq2 << '\n';
 
-    double kmere_jac = jaccard_index_(kmere_seq1, kmere_seq2);
-    std::cout << kmere_jac << std::endl;
+    //double kmere_jac = jaccard_index_(kmere_seq1, kmere_seq2);
+    //std::cout << kmere_jac << std::endl;
+    return jaccard_index_(kmere_seq1, kmere_seq2);
 }
 
-void mini (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km, uint32_t w) {
+double mini (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km, uint32_t w) {
     uint64_t seed = 0x8F3F73B5CF1C9ADE; //Höchster Seed, eventuell Anpassugn später
     uint32_t window = w - km + 1; //window size Berechnung für eingabe bei minimiser
     auto mini_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}})
@@ -167,8 +164,10 @@ void mini (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, u
     //seqan3::debug_stream << mini_seq2 << '\n';
 
     //Aufruf der Berechnung
-    double mini_jac = jaccard_index_(mini_seq1, mini_seq2);
-    std::cout << mini_jac << std::endl;
+    // double mini_jac = jaccard_index_(mini_seq1, mini_seq2);
+    // std::cout << mini_jac << std::endl;
+
+    return jaccard_index_(mini_seq1, mini_seq2);
 }
 
 void run_program (eingabe & in) {
@@ -190,17 +189,20 @@ void run_program (eingabe & in) {
    
     //kmere(seq1, seq2, in.k);
     //Modus wird abgefragt mit entsprechenden Aufrufen
+    std::ofstream output {"output.txt", std::ios::app};
     if (modus == 'k') {
 
-        kmere(seq1, seq2, in.k);
+        double index = kmere(seq1, seq2, in.k);
+        std::cout << "Index: " << index;
     }
     else if (modus == 'm') {
 
-        mini(seq1, seq2, in.k, in.window);
+        double index = mini(seq1, seq2, in.k, in.window);
+        std::cout << "Index: " << index;
     }
     else {
-        kmere(seq1,seq2, in.k);
-        mini(seq1,seq2, in.k, in.window);
+        output << kmere(seq1,seq2, in.k) << "    " <<  mini(seq1,seq2, in.k, in.window) 
+        << "     " << in.k + 0 << "     " << in.window - in.k + 1 << '\n';
     }
     
 }
