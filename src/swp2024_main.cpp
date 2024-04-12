@@ -9,16 +9,16 @@
 
 #include <algorithm>
 #include <ranges>
-#include <map>
+//#include <map>
+#include <set>
 #include <limits.h>
 
 using namespace seqan3::literals;
 
 
 //TO DO: 
-// 1. K mer Customizing
-// 2. File input 
-// 3. Window size custom
+// 1. Dateieingabe Anpassung (mehr als zwei?) aber definitv beschränkung
+// 2. Überlegen wie darstellen und was testem
 
 //Struct für die Eingabeparameter
 struct eingabe {
@@ -39,7 +39,7 @@ struct eingabe {
 // size_2 -> #Kmere in Sequenz EXKLUSIVE der kmere in der Intersection
 // Darauf folgt: size_1 + size_2 == Union von Seq 1 und Seq 2
 // Anschließend Jaccard Berechnung: inter / (size_1 + size_2)
-double jaccard_index (auto & first, auto & second) {
+/*double jaccard_index (auto & first, auto & second) {
     //Intialisierung
     double size_1 {0};
     double size_2 {0};
@@ -81,6 +81,34 @@ double jaccard_index (auto & first, auto & second) {
 
     //Jaccard Index berechnet und zurückgegeben
     return inter/(size_1+size_2);
+} */
+
+double jaccard_index_ (auto & first, auto & second) {
+
+    std::set<size_t> set1 {};
+    std::set<size_t> set2 {};
+
+    for (auto sec : first) {
+        set1.emplace(sec);
+    }
+
+    for (auto sec : second) {
+        set2.emplace(sec);
+    }
+
+    seqan3::debug_stream << set1 << '\n';
+    seqan3::debug_stream << set2 << '\n';
+
+    std::vector<size_t> vec;
+    std::set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), std::back_inserter(vec));
+    double inter = vec.size();
+
+    vec.clear();
+    std::set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), std::back_inserter(vec));
+    double uni = vec.size();
+
+    seqan3::debug_stream << "Inter: " << inter << '\n' << "Uni: " << uni << '\n';
+    return inter/uni;
 }
 
 void intialize_parser (sharg::parser & parser, eingabe & in) {
@@ -116,12 +144,12 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
 void kmere (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, uint8_t km) {
     //Aufruf der Funktionene und der Berechnung
     auto kmere_seq1 = seq1 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    //seqan3::debug_stream << kmere_seq1 << '\n';
+    seqan3::debug_stream << kmere_seq1 << '\n';
 
     auto kmere_seq2 = seq2 | seqan3::views::kmer_hash(seqan3::shape{seqan3::ungapped{km}});
-    //seqan3::debug_stream << kmere_seq2 << '\n';
+    seqan3::debug_stream << kmere_seq2 << '\n';
 
-    double kmere_jac = jaccard_index(kmere_seq1, kmere_seq2);
+    double kmere_jac = jaccard_index_(kmere_seq1, kmere_seq2);
     std::cout << kmere_jac << std::endl;
 }
 
@@ -139,7 +167,7 @@ void mini (std::vector<seqan3::dna5> & seq1, std::vector<seqan3::dna5> & seq2, u
     //seqan3::debug_stream << mini_seq2 << '\n';
 
     //Aufruf der Berechnung
-    double mini_jac = jaccard_index(mini_seq1, mini_seq2);
+    double mini_jac = jaccard_index_(mini_seq1, mini_seq2);
     std::cout << mini_jac << std::endl;
 }
 
@@ -149,14 +177,14 @@ void run_program (eingabe & in) {
 
     seqan3::sequence_file_input file1{in.file[0]};
     seqan3::sequence_file_input file2{in.file[1]};
-    std::vector<seqan3::dna5> seq1 {};
-    std::vector<seqan3::dna5> seq2 {};
-    for (auto & sec : file1) {
+    std::vector<seqan3::dna5> seq1 {"ATGCTAGCTGAT"_dna5};
+    std::vector<seqan3::dna5> seq2 {"GTGCGTATCGAA"_dna5};
+    /*for (auto & sec : file1) {
         seq1 = sec.sequence();
     }
     for (auto & sec : file2) {
         seq2 = sec.sequence();
-    }
+    }*/
 
     //seqan3::debug_stream << seq1 << std::endl;
    
