@@ -26,6 +26,7 @@ struct eingabe {
     uint8_t k {5};
     size_t window {5};
     std::vector<std::filesystem::path> file{};
+    std::string output{"output.txt"};
 };
 
 //Generelle Idee: Wir gehen die kmere der ersten Sequenz durch ujd merken uns, 
@@ -134,6 +135,11 @@ void intialize_parser (sharg::parser & parser, eingabe & in) {
                                                 .long_id = "input",
                                                 .description = "Bitte GENAU zwei Eingabedateien eingeben",
                                                 });//.validator = my_file_ext_validator
+
+    parser.add_option(in.output, sharg::config{  .short_id = 'o',
+                                                .long_id = "output",
+                                                .description = "Name der Ausgabedatei",
+                                                });
     
 }
 
@@ -176,20 +182,20 @@ void run_program (eingabe & in) {
 
     seqan3::sequence_file_input file1{in.file[0]};
     seqan3::sequence_file_input file2{in.file[1]};
-    std::vector<seqan3::dna5> seq1 {"ATGCTAGCTGAT"_dna5};
-    std::vector<seqan3::dna5> seq2 {"GTGCGTATCGAA"_dna5};
-    /*for (auto & sec : file1) {
+    std::vector<seqan3::dna5> seq1 {};
+    std::vector<seqan3::dna5> seq2 {};
+    for (auto & sec : file1) {
         seq1 = sec.sequence();
     }
     for (auto & sec : file2) {
         seq2 = sec.sequence();
-    }*/
+    }
 
     //seqan3::debug_stream << seq1 << std::endl;
    
     //kmere(seq1, seq2, in.k);
     //Modus wird abgefragt mit entsprechenden Aufrufen
-    std::ofstream output {"output.txt", std::ios::app};
+    std::ofstream output {in.output, std::ios::app};
     if (modus == 'k') {
 
         double index = kmere(seq1, seq2, in.k);
