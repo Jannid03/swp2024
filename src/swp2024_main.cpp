@@ -84,6 +84,8 @@ struct eingabe {
     return inter/(size_1+size_2);
 } */
 
+//Zuerst konvertieren der Werte in std::set. Dann Implmeentierung des Jaccard Indexes mit 
+// set_intersection und set_union
 double jaccard_index_ (auto & first, auto & second) {
 
     std::set<size_t> set1 {};
@@ -108,6 +110,7 @@ double jaccard_index_ (auto & first, auto & second) {
     return inter/uni;
 }
 
+//Parserfunktion, wichtig für Eingabe
 void intialize_parser (sharg::parser & parser, eingabe & in) {
     parser.info.author = "Jannik Dubrau";
     parser.info.short_description = "Jaccard Index für K-Mere und Minimizer";
